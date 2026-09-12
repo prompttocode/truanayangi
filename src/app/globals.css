@@ -181,14 +181,14 @@ html{scrollbar-gutter:stable}.reel-window{overflow:clip}.reel-track{transform:tr
 .winner-actions .grabfood-button{display:none}@media(pointer:coarse),(max-width:640px){.winner-actions{flex-wrap:wrap;gap:12px}.winner-actions .grabfood-button{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:48px;padding:12px 18px;border:1px solid #00b14f;border-radius:6px;background:#00b14f;color:#071e10;text-decoration:none;font-size:14px;font-weight:600;flex:1 0 100%}.grabfood-label strong{font-size:19px;letter-spacing:-.5px;margin-left:3px}.winner-actions .grabfood-button:hover{background:#13c561}.winner-actions .grabfood-button:active{background:#009e46}.winner-actions .find-button{margin-right:auto}.winner-actions .grabfood-button{order:-1}}
 
 /* Keep the food-case wordmark legible and leave mobile room for account controls. */
-.brand { flex: 0 0 auto; min-width: 0; }
-.brand picture, .brand-logo { display: block; }
-.brand-logo { width: 180px; height: 60px; object-fit: contain; }
+.brand { flex: 0 0 auto; min-width: 0; display: flex; align-items: center; text-decoration: none; }
+.brand-logo { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid #dec98955; box-shadow: 0 0 14px #dec98933; transition: transform 0.2s, box-shadow 0.2s; }
+.brand-logo:hover { transform: scale(1.05); box-shadow: 0 0 20px #dec98966; }
 @media (max-width: 900px) {
   .brand-logo { width: 44px; height: 44px; }
 }
 @media (max-width: 640px) {
-  .brand-logo { width: 40px; height: 40px; }
+  .brand-logo { width: 38px; height: 38px; }
 }
 
 /* Discovery filter panel matching truanayangi style */
