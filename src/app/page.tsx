@@ -153,6 +153,6 @@ export default function Home(){
 
  <section className="inventory"><div className="section-heading"><div><span className="eyebrow">{t.whatsInside}</span><div className="inventory-title-row"><h2>{t.items} <span>{filteredInventoryFoods.length.toString().padStart(2,'0')}</span>{filteredInventoryFoods.length!==eligible.length&&<small style={{fontSize:'13px',color:'#909ea8',marginLeft:'6px'}}>/ {eligible.length}</small>}</h2><PreferencesPanel preferences={preferences} language={language} disabled={spinning} variant="inventory"/></div></div><div className="rarity-legend">{t.tiers.map((tier,i)=><span key={tier}><i style={{background:colors[i]}}/>{tier}</span>)}</div></div><FilterPanel filters={filters} onChange={setFilters} language={language} totalMatches={filteredInventoryFoods.length}/><label className="filter-sync-spin"><input type="checkbox" checked={syncFilterToSpin} onChange={e=>setSyncFilterToSpin(e.target.checked)} disabled={spinning}/><span>{language==='vi'?'Chỉ quay các món trong bộ lọc này':'Only spin dishes matching this filter'}</span></label><div className="inventory-grid" style={{marginTop:'16px'}}>{inventoryCards}</div></section>
 
- </><footer><span>Trưa Nay Ăn Gì · <a href={`${basePath}/privacy.html`}>{language==='vi'?'Quyền riêng tư':'Privacy'}</a> · <a href={`${basePath}/terms.html`}>{language==='vi'?'Điều khoản':'Terms'}</a></span><span>{t.footer} <a href="https://github.com/sourcesounds/csgo" target="_blank" rel="noreferrer">SourceSounds</a></span></footer>
+ </>
  </main></div>
 }
