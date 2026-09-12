@@ -4,6 +4,7 @@ import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/u
 import {foods} from '@/lib/foods';
 import {foodName,priceLabel,type Language} from '@/lib/i18n';
 import {emptyProfile,validateProfile,type PoolProfile} from '@/lib/personal-pool';
+import {classifyFood,dishTypeLabels,type DishType} from '@/lib/dish-categories';
 import type {Preferences} from '@/hooks/use-preferences';
 export function PreferencesPanel({preferences:a,language,disabled,variant='header'}:{preferences:Preferences;language:Language;disabled:boolean;variant?:'header'|'inventory'}){
  const vi=language==='vi';const [open,setOpen]=useState(false),[draft,setDraft]=useState<PoolProfile>(emptyProfile),[search,setSearch]=useState(''),[tab,setTab]=useState<'builtIn'|'custom'>('builtIn');
@@ -15,11 +16,36 @@ export function PreferencesPanel({preferences:a,language,disabled,variant='heade
  }
  const dirty=JSON.stringify(draft)!==JSON.stringify(a.profile);
  const updateDraft=(next:PoolProfile)=>{setDraft(next);a.save(next)};
+ const [prefType,setPrefType]=useState<DishType>('all');
+ const visibleCatalog=foods.filter(f=>{
+  if(search&&!foodName(f,language).toLocaleLowerCase().includes(search.toLocaleLowerCase()))return false;
+  if(prefType!=='all'){
+   const {type}=classifyFood(f);
+   if(prefType==='veg'?!f.veg:type!==prefType)return false;
+  }
+  return true;
+ });
+ const enableVisible=()=>{
+  const visibleIds=new Set(visibleCatalog.map(f=>f.image));
+  updateDraft({...draft,disabled:draft.disabled.filter(id=>!visibleIds.has(id))});
+ };
+ const disableVisible=()=>{
+  const visibleIds=visibleCatalog.map(f=>f.image);
+  const nextDisabled=Array.from(new Set([...draft.disabled,...visibleIds]));
+  if(foods.length-nextDisabled.length+draft.custom.length<1){
+   setNotice(vi?'Cần giữ lại ít nhất 1 món trong hòm.':'Keep at least one dish in the pool.');
+   return;
+  }
+  updateDraft({...draft,disabled:nextDisabled});
+ };
  return <><button className={variant==='inventory'?'customize-food-button':'preferences-button'} disabled={disabled} onClick={()=>{setDraft(a.profile);setNotice('');setConfirmDelete(false);setOpen(true)}} aria-label={variant==='inventory'?(vi?'Tuỳ chỉnh món ăn':'Customize food'):(vi?'Món của tôi':'My dishes')}>{variant==='inventory'?<><SlidersHorizontal size={16}/><span className="customize-full">{vi?'Tuỳ chỉnh món ăn':'Customize food'}</span><span className="customize-short">{vi?'Tuỳ chỉnh':'Customize'}</span></>:<><SlidersHorizontal size={17}/><span>{vi?'Món của tôi':'My dishes'}</span></>}</button>
  <Dialog open={open} onOpenChange={setOpen}><DialogContent className="preferences-dialog"><DialogTitle>{vi?'Món của tôi':'My dishes'}</DialogTitle><DialogDescription>{vi?'Tự động lưu lựa chọn bằng cookie trên máy này.':'Choices are automatically saved in cookies on this computer.'}</DialogDescription>
  <div className="pool-tabs"><button className={tab==='builtIn'?'selected':''} onClick={()=>setTab('builtIn')}>{vi?'Món có sẵn':'Catalog'} ({foods.length-draft.disabled.length})</button><button className={tab==='custom'?'selected':''} onClick={()=>setTab('custom')}>{vi?'Món tự thêm':'Custom'} ({draft.custom.length}/50)</button></div>
  <div className="pool-body"><fieldset>
- {tab==='builtIn'?<><input className="pool-search" placeholder={vi?'Tìm món…':'Search dishes…'} aria-label={vi?'Tìm món':'Search dishes'} value={search} onChange={e=>setSearch(e.target.value)}/><div className="pool-list">{foods.filter(f=>foodName(f,language).toLocaleLowerCase().includes(search.toLocaleLowerCase())).map(f=><label className="pool-row" key={f.image}><input type="checkbox" checked={!draft.disabled.includes(f.image)} onChange={e=>updateDraft({...draft,disabled:e.target.checked?draft.disabled.filter(id=>id!==f.image):[...draft.disabled,f.image]})}/><span>{foodName(f,language)}{f.veg?' · 🌱':''}</span><small>{priceLabel(f.price,language)}</small></label>)}</div><button className="subtle-button" onClick={()=>updateDraft({...draft,disabled:[]})}>{vi?'Bật lại tất cả món có sẵn':'Enable all catalog dishes'}</button></>:<>
+ {tab==='builtIn'?<>
+ <div className="pool-filters-bar"><input className="pool-search" placeholder={vi?'Tìm món…':'Search dishes…'} aria-label={vi?'Tìm món':'Search dishes'} value={search} onChange={e=>setSearch(e.target.value)}/><select className="pool-type-select" value={prefType} onChange={e=>setPrefType(e.target.value as DishType)} aria-label={vi?'Lọc theo loại':'Filter by type'}>{(Object.keys(dishTypeLabels) as DishType[]).map(k=><option key={k} value={k}>{vi?dishTypeLabels[k].vi:dishTypeLabels[k].en}</option>)}</select></div>
+ <div className="pool-list">{visibleCatalog.map(f=><label className="pool-row" key={f.image}><input type="checkbox" checked={!draft.disabled.includes(f.image)} onChange={e=>updateDraft({...draft,disabled:e.target.checked?draft.disabled.filter(id=>id!==f.image):[...draft.disabled,f.image]})}/><span>{foodName(f,language)}{f.veg?' · 🌱':''}</span><small>{priceLabel(f.price,language)}</small></label>)}</div>
+ <div className="pool-actions-row"><button type="button" onClick={enableVisible}>{vi?`Bật ${visibleCatalog.length} món đang lọc`:`Enable ${visibleCatalog.length} filtered`}</button><button type="button" onClick={disableVisible}>{vi?`Tắt ${visibleCatalog.length} món đang lọc`:`Disable ${visibleCatalog.length} filtered`}</button><button type="button" onClick={()=>updateDraft({...draft,disabled:[]})}>{vi?'Bật lại tất cả món':'Enable all'}</button></div></>:<>
  <div className="custom-form"><label>{vi?'Tên món':'Dish name'}<input value={name} maxLength={60} onChange={e=>setName(e.target.value)}/></label><label>{vi?'Giá (nghìn đồng)':'Price (thousand VND)'}<input type="number" min="10" max="500" step="1" inputMode="numeric" value={price} onChange={e=>setPrice(e.target.value)}/></label><label className="inline-check"><input type="checkbox" checked={veg} onChange={e=>setVeg(e.target.checked)}/>{vi?'Món chay':'Vegetarian'}</label><button className="pool-primary" onClick={add}><Plus size={16}/>{editing?(vi?'Cập nhật':'Update'):(vi?'Thêm món':'Add dish')}</button>{editing&&<button onClick={resetForm}>{vi?'Huỷ sửa':'Cancel edit'}</button>}</div>
  <div className="pool-list">{draft.custom.length===0&&<p>{vi?'Thêm quán cơm quen hoặc món tủ của bạn.':'Add your favorite lunch dish.'}</p>}{draft.custom.map(f=><div className="pool-row" key={f.id}><button onClick={()=>{setEditing(f.id);setName(f.name);setPrice(String(f.price));setVeg(f.veg)}}>{f.name}{f.veg?' · 🌱':''}</button><small>{priceLabel(f.price,language)}</small><button aria-label={`${vi?'Xóa':'Remove'} ${f.name}`} onClick={()=>{updateDraft({...draft,custom:draft.custom.filter(item=>item.id!==f.id)});if(editing===f.id)resetForm()}}><Trash2 size={15}/></button></div>)}</div></>}
  </fieldset></div>
